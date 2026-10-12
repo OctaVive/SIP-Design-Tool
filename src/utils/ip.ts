@@ -4,8 +4,9 @@ export function isValidIPv4(ip: string): boolean {
   const parts = clean.split('.');
   if (parts.length !== 4) return false;
   return parts.every(part => {
+    if (!/^\d{1,3}$/.test(part)) return false;
     const num = parseInt(part, 10);
-    return !isNaN(num) && num >= 0 && num <= 255 && part === num.toString();
+    return !isNaN(num) && num >= 0 && num <= 255;
   });
 }
 
@@ -94,7 +95,7 @@ export function validateLocation(loc: any): string[] {
 
     cpe.pbxs?.forEach((pbx: any, pbxIndex: number) => {
       if (pbx.ip && !isValidIPv4(pbx.ip)) {
-        warnings.push(`${prefix}SIP Endpoint ${pbxIndex + 1} IP (${pbx.ip}) is geen geldig IPv4 adres.`);
+        warnings.push(`${prefix}SIP PBX ${pbxIndex + 1} IP (${pbx.ip}) is geen geldig IPv4 adres.`);
       }
     });
 
@@ -112,7 +113,7 @@ export function validateLocation(loc: any): string[] {
         if (pbx.ip && isValidIPv4(pbx.ip)) {
           if (!isInSameSubnet(effectiveLanIp, pbx.ip, cidr)) {
              if (!cpe.defaultGateway || !isValidIPv4(cpe.defaultGateway)) {
-                warnings.push(`${prefix}SIP Endpoint ${pbxIndex + 1} (${pbx.ip}) valt buiten het LAN subnet, maar er is geen geldige Default Gateway geconfigureerd om de routering mogelijk te maken.`);
+                warnings.push(`${prefix}SIP PBX ${pbxIndex + 1} (${pbx.ip}) valt buiten het LAN subnet, maar er is geen geldige Default Gateway geconfigureerd om de routering mogelijk te maken.`);
              }
           }
         }
@@ -145,5 +146,13 @@ export function getNextMediantHostname(locations: any[]): string {
   }
 
   const nextNum = maxNum + 1;
-  return `Mediant-${nextNum.toString().padStart(2, '0')}`;
+  return `MEDIANT-${nextNum.toString().padStart(2, '0')}`;
+}
+
+export function padTo3Digits(val: string | number | undefined): string {
+  if (val === undefined || val === null) return '001';
+  const str = String(val).trim();
+  const digits = str.replace(/\D/g, '');
+  if (!digits) return '001';
+  return digits.padStart(3, '0').slice(-3);
 }
